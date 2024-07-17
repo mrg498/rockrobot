@@ -24,7 +24,8 @@
             padding: 20px;
             border-radius: 8px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            width: 300px;
+            width: 500px;
+            max-width: 90vw;
             position: relative;
         }
 
@@ -75,6 +76,7 @@
 <body>
     <div class="form-container">
         <h3 class="text-center mb-4">Find Local Shows!</h3>
+        <p class="text-center">Recieve texts for rock shows in your area.</p>
         <form id="registrationForm">
             <div class="form-group">
                 <label for="phoneNumber">Phone Number:</label>
@@ -86,7 +88,7 @@
                 </div>
             </div>
             <div class="form-group">
-                <label for="address">Address:</label>
+                <label for="address">Nearby Address:</label>
                 <input type="text" class="form-control" id="address" name="address" required autocomplete="off">
                 <div id="autocompleteSuggestions" class="autocomplete-suggestions"></div>
             </div>
@@ -128,8 +130,8 @@
             }
 
             data.forEach((item, index) => {
-                let displayNameEdit = item.display_name.split(',').slice(0, -1); // Remove the county and country
-                displayNameEdit.splice(3, 1);
+                let displayNameEdit = item.display_name.split(',').slice(0, -1); // Remove the country
+                // displayNameEdit.splice(3, 1);
                 let displayName = displayNameEdit.join(',');
 
                 const suggestionItem = document.createElement('div');
