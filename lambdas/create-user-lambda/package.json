@@ -1,0 +1,17 @@
+{
+  "name": "create-user-lambda",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.mjs",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.616.0",
+    "@aws-sdk/lib-dynamodb": "^3.616.0",
+    "aws-sdk": "^2.1659.0",
+    "axios": "^1.7.2"
+  }
+}
