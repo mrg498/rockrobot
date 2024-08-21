@@ -82,7 +82,7 @@
 <body>
     <div class="form-container">
         <h3 class="text-center mb-4">Find Local Rock Shows!</h3>
-        <p class="text-center">Recieve texts for rock shows in your area 🤘</p>
+        <p class="text-center">Recieve daily texts for rock shows in your area 🤘</p>
         <form id="registrationForm">
             <div class="form-group">
                 <label for="phoneNumber">Phone Number:</label>
@@ -173,7 +173,7 @@
             // Normalize phone number: remove non-numeric characters except the leading +
             phoneNumber = '+1' + phoneNumber.replace(/\D/g, '');
 
-            const response = await fetch('https://your-api-endpoint.com/register', {
+            const response = await fetch('https://6qeorl97ri.execute-api.us-east-2.amazonaws.com/QA/user', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
