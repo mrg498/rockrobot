@@ -14,6 +14,10 @@ export const handler = async (event) => {
     if (!phoneNumberRegex.test(phoneNumber)) {
         return {
             statusCode: 400,
+            headers: {
+                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Credentials': true,
+            },
             body: JSON.stringify({ error: 'Invalid phone number. Must start with +1 and be followed by 10 digits.' }),
         };
     }
@@ -37,6 +41,10 @@ export const handler = async (event) => {
         if (response.data.length === 0) {
             return {
                 statusCode: 400,
+                headers: {
+                    'Access-Control-Allow-Origin': '*',
+                    'Access-Control-Allow-Credentials': true,
+                },
                 body: JSON.stringify({ error: 'Invalid address.' }),
             };
         }
@@ -61,12 +69,20 @@ export const handler = async (event) => {
         await dynamoDb.send(new PutCommand(params));
         return {
             statusCode: 200,
+            headers: {
+                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Credentials': true,
+            },
             body: JSON.stringify({ message: 'User registered successfully' }),
         };
     } catch (error) {
         console.error('Error validating address:', error);
         return {
             statusCode: 500,
+            headers: {
+                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Credentials': true,
+            },
             body: JSON.stringify({ error: 'Could not register user' }),
         };
     }
