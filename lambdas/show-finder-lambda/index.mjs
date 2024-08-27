@@ -33,11 +33,11 @@ export const handler = async (event) => {
     const shows = JSON.parse(jsonData);
 
     // Get today's recommended shows
-    const recommendedShows = getRecommendedShowsForToday(shows);
+    const result = getRecommendedShowsForToday(shows);
 
     return {
       statusCode: 200,
-      body: recommendedShows.length > 0 ? JSON.stringify(recommendedShows) : 'No show recs for today :(',
+      body: result.shows.length > 0 ? JSON.stringify(result) : 'No show recs for today :(',
     };
   } catch (error) {
     console.error('Error fetching data:', error);
@@ -51,7 +51,8 @@ export const handler = async (event) => {
 // Function to filter recommended shows for the current day
 const getRecommendedShowsForToday = (shows) => {
   const today = new Date().toISOString().slice(0, 10); // Get today's date in YYYY-MM-DD format
-  return shows
+  const todayString = `Shows for ${new Date().toLocaleDateString()}`
+  const filteredShows = shows
     .filter(show => show.recommended && show.starts_at.startsWith(today))
     .map(show => ({
       venue: show.venue.name,
@@ -60,4 +61,8 @@ const getRecommendedShowsForToday = (shows) => {
       tickets_url: show.tickets_url,
       bands: show.cached_bands.map(band => band.name),
     }));
+  return {
+    title: todayString,
+    shows: filteredShows,
+  }
 };
