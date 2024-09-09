@@ -118,7 +118,7 @@
                 <div id="autocompleteSuggestions" class="autocomplete-suggestions"></div>
             </div>
             <div class="form-group form-check form-check-inline">
-                <input class="custom-checkbox" type="checkbox" id="smsConsent" name="smsConsent" required>
+                <input class="custom-checkbox" type="checkbox" id="smsConsent" name="smsConsent">
                 <label class="form-check-label" for="smsConsent">By checking this box, I agree to receive messages from
                     Rock Robot via
                     SMS.</label>
@@ -197,10 +197,10 @@
             const smsConsent = document.getElementById('smsConsent').checked;
             const submitButton = document.querySelector('.btn-submit');
 
-            if (!smsConsent) {
-                alert('You must agree to receive SMS to register.');
-                return;
-            }
+            // if (!smsConsent) {
+            //     alert('You must agree to receive SMS to register.');
+            //     return;
+            // }
 
             // Normalize phone number: remove non-numeric characters except the leading +
             phoneNumber = '+1' + phoneNumber.replace(/\D/g, '');
@@ -214,7 +214,7 @@
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ phoneNumber, address })
+                body: JSON.stringify({ phoneNumber, address, smsConsent })
             });
 
             submitButton.disabled = false;
