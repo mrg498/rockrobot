@@ -21,6 +21,9 @@ When uploading a lambda
 - upload to the lambda
 - run a test on the lambda directly through the lambda console UI
 
+# AWS API Gateway
+This handles calling lambdas with a public facing endpoint address. We use it for signing up users. We should also use it for twilio webhook and reacting to user sent messages from twilio
+
 # twilio
 We have a messaging campaing running for this website on my twilio account
 
