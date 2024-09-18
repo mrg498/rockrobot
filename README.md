@@ -1,5 +1,5 @@
 ## rockrobot
-automated texts with nearby shows
+automated texts with nearby shows. View the Projects tab to see the project board for tickets
 
 # signup page
 https://mrg498.github.io/rockrobot/
