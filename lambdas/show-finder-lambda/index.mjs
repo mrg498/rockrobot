@@ -73,7 +73,7 @@ const getRecommendedShowsForToday = (shows) => {
       sold_out: show.sold_out,
       tickets_url: show.tickets_url,
       bands: show.cached_bands.map(band => band.name),
-    }));
+    }));  
 
   return {
     title: todayString,
@@ -130,8 +130,24 @@ const generateSMSMessage = (recommendedShows) => {
     if (show.sold_out) {
       message += 'SOLD OUT\n';
     }
-    message += `${show.tickets_url ? `Tickets: ${show.tickets_url}\n\n` : ''}`;
+    message += `${show.tickets_url ? `Tickets: ${show.tickets_url}\n\n` : '\n'}`;
   });
+
+  let totalCharCount = message.length
+
+  //limit message to 1600 chars because that's the max length twilio will send
+  if(totalCharCount > 1600){
+    let messageLength = totalCharCount
+    let index = message.length - 1
+    while(messageLength > 1600 && index >= 0){
+      if(message.charAt(index) === '\n' && message.charAt(index - 1) === '\n'){
+        messageLength = index + 1
+      }
+      index -= 1
+    }
+
+    message = message.slice(0, messageLength)
+  }
 
   return message.trim();
 };
