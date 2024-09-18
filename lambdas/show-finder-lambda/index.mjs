@@ -6,7 +6,7 @@ import twilio from 'twilio';
 // Twilio credentials
 const accountSid = process.env.twilio_account_sid;
 const authToken = process.env.twilio_auth_token;
-const twilioPhoneNumber = process.env.twilio_phone_number;
+const messagingServiceSid = process.env.twilio_messaging_service_sid; // Messaging Service SID
 const twilioClient = twilio(accountSid, authToken);
 
 // Initialize S3 and DynamoDB clients
@@ -105,12 +105,16 @@ const sendSMSToUsers = async (users, recommendedShows) => {
   }
   
   for (const user of users) {
-    if (user.phoneNumber.S === '+15129659420'){ // this is the twilio virtual number
+    if (user.phoneNumber.S) { // Ensure phoneNumber exists in the user object
+      console.log(`Sending message to ${user.phoneNumber.S}`); // Log the phone number
+
       const response = await twilioClient.messages.create({
         body: message,
-        from: twilioPhoneNumber,
+        messagingServiceSid: messagingServiceSid, // Use Messaging Service SID here
         to: user.phoneNumber.S,
       });
+
+      console.log(`Message SID: ${response.sid}`); // Log the message SID
     }
   }
 };
@@ -120,13 +124,13 @@ const generateSMSMessage = (recommendedShows) => {
   let message = `${recommendedShows.title}\n\n`;
 
   recommendedShows.shows.forEach(show => {
-    message += `venue: ${show.venue}\n`
-    message += `bands: ${show.bands.join(', ')}\n`;
-    message += `age: ${show.age}\n`;
+    message += `Venue: ${show.venue}\n`;
+    message += `Bands: ${show.bands.join(', ')}\n`;
+    message += `Age: ${show.age}\n`;
     if (show.sold_out) {
       message += 'SOLD OUT\n';
     }
-    message += `${show.tickets_url ? `tickets: ${show.tickets_url}\n\n` : ''}`;
+    message += `${show.tickets_url ? `Tickets: ${show.tickets_url}\n\n` : ''}`;
   });
 
   return message.trim();

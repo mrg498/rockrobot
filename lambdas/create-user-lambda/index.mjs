@@ -1,9 +1,16 @@
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { DynamoDBDocumentClient, PutCommand } from '@aws-sdk/lib-dynamodb';
 import axios from 'axios';
+import twilio from 'twilio';
 
 const client = new DynamoDBClient({ region: 'us-east-2' });
 const dynamoDb = DynamoDBDocumentClient.from(client);
+
+// Twilio credentials from environment variables
+const accountSid = process.env.twilio_account_sid;
+const authToken = process.env.twilio_auth_token;
+const messagingServiceSid = process.env.twilio_messaging_service_sid;
+const twilioClient = twilio(accountSid, authToken);
 
 export const handler = async (event) => {
     const body = JSON.parse(event.body);
@@ -53,6 +60,7 @@ export const handler = async (event) => {
         const latitude = locationData.lat;
         const longitude = locationData.lon;
 
+        // Add user to DynamoDB
         const params = {
             TableName: 'RockRobot-QA-Users',
             Item: {
@@ -62,21 +70,30 @@ export const handler = async (event) => {
                 createdAt: new Date().toISOString(),
                 updatedAt: new Date().toISOString(),
                 deleted: false,
-                verified: false,
+                verified: false, // initially unverified
+                retryVerify: false,
             },
         };
-        console.log(params)
         await dynamoDb.send(new PutCommand(params));
+
+        // Send welcome message
+        const welcomeMessage = "Welcome to Rock Robot!\n\nYou have signed up to recieve a daily text message of reccomended live music shows in your area.\n\nPlease reply with 'Y' or 'YES' to verify your phone number.\n\nYou can reply with 'N' or 'NO' at any time to unsubscribe.";
+        await twilioClient.messages.create({
+            body: welcomeMessage,
+            messagingServiceSid: messagingServiceSid,
+            to: phoneNumber
+        });
+
         return {
             statusCode: 200,
             headers: {
                 'Access-Control-Allow-Origin': '*',
                 'Access-Control-Allow-Credentials': true,
             },
-            body: JSON.stringify({ message: 'User registered successfully' }),
+            body: JSON.stringify({ message: 'User registered and welcome message sent successfully' }),
         };
     } catch (error) {
-        console.error('Error validating address:', error);
+        console.error('Error registering user:', error);
         return {
             statusCode: 500,
             headers: {
