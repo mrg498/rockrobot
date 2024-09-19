@@ -2,7 +2,9 @@ const getRecommendedShowsForToday = (shows) => {
   const today = new Date().toISOString().slice(0, 10); // Get today's date in YYYY-MM-DD format
   const todayString = `Shows for ${new Date().toLocaleDateString()}`;
 
-  const filteredShows = shows.map(show => ({
+  const filteredShows = shows
+    .filter(show => show.recommended && show.starts_at.startsWith(today))
+    .map(show => ({
       venue: show.venue.name,
       age: show.age,
       sold_out: show.sold_out,

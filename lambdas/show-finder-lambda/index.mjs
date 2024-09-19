@@ -62,11 +62,22 @@ export const handler = async (event) => {
 
 // Function to filter recommended shows for the current day
 const getRecommendedShowsForToday = (shows) => {
-  const today = new Date().toISOString().slice(0, 10); // Get today's date in YYYY-MM-DD format
   const todayString = `Shows for ${new Date().toLocaleDateString()}`;
 
+  const startOfDay = new Date();
+  startOfDay.setHours(6, 0, 0, 0); 
+
+  const endOfDay = new Date();
+  endOfDay.setDate(startOfDay.getDate() + 1);
+  endOfDay.setHours(5, 59, 59, 999);
+
   const filteredShows = shows
-    .filter(show => show.recommended && show.starts_at.startsWith(today))
+    .filter(show => {
+      if(!show.recommended) return false;
+
+      const showStartTime = new Date(show.starts_at);
+      return showStartTime >= startOfDay && showStartTime <= endOfDay
+    })
     .map(show => ({
       venue: show.venue.name,
       age: show.age,
@@ -126,7 +137,7 @@ const generateSMSMessage = (recommendedShows) => {
   recommendedShows.shows.forEach(show => {
     message += `Venue: ${show.venue}\n`;
     message += `Bands: ${show.bands.join(', ')}\n`;
-    message += `Age: ${show.age}\n`;
+    message += `Age: ${show.age ?? 'unknown'}\n`;
     if (show.sold_out) {
       message += 'SOLD OUT\n';
     }
