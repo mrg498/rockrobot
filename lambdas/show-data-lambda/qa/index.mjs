@@ -66,8 +66,6 @@ export const handler = async (event) => {
             const showData = JSON.parse(responseBody);
             const jsonData = JSON.stringify(showData, null, 2);
 
-            console.log(jsonData);
-
             const params = {
                 Bucket: 'ohmyrocknessdata',
                 Key: value.bucketKey,
