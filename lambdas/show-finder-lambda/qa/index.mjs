@@ -19,7 +19,7 @@ export const handler = async (event) => {
     // Fetch the JSON data from S3
     const s3Params = {
       Bucket: 'ohmyrocknessdata',
-      Key: 'shows.json',
+      Key: 'new_york.json',
     };
     
     const command = new GetObjectCommand(s3Params);
