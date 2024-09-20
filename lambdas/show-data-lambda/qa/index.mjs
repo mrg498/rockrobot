@@ -77,10 +77,6 @@ export const handler = async (event) => {
 
             await s3.putObject(params).promise();
 
-            return {
-                statusCode: 200,
-                body: JSON.stringify('Show data updated successfully!')
-            };
         } catch (error) {
             console.error('Error updating show data:', error);
 
@@ -90,5 +86,10 @@ export const handler = async (event) => {
             };
         }
     }
+
+    return {
+                statusCode: 200,
+                body: JSON.stringify('Show data updated successfully!')
+            };
     
 };
