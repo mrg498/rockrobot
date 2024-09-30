@@ -1,55 +1,4 @@
-const getRecommendedShowsForToday = (shows) => {
-  const today = new Date().toISOString().slice(0, 10); // Get today's date in YYYY-MM-DD format
-  const todayString = `Shows for ${new Date().toLocaleDateString()}`;
-
-  const filteredShows = shows
-    .filter(show => show.recommended && show.starts_at.startsWith(today))
-    .map(show => ({
-      venue: show.venue.name,
-      age: show.age,
-      sold_out: show.sold_out,
-      tickets_url: show.tickets_url,
-      bands: show.cached_bands.map(band => band.name),
-    }));  
-
-  return {
-    title: todayString,
-    shows: filteredShows,
-  };
-};
-
-const generateSMSMessage = (recommendedShows) => {
-  let message = `${recommendedShows.title}\n\n`;
-
-  recommendedShows.shows.forEach(show => {
-    message += `Venue: ${show.venue}\n`;
-    message += `Bands: ${show.bands.join(', ')}\n`;
-    message += `Age: ${show.age}\n`;
-    if (show.sold_out) {
-      message += 'SOLD OUT\n';
-    }
-    message += `${show.tickets_url ? `Tickets: ${show.tickets_url}\n\n` : '\n'}`;
-  });
-
-  let totalCharCount = message.length
-
-  if(totalCharCount > 1600){
-    let messageLength = totalCharCount
-    let index = message.length - 1
-    while(messageLength > 1600 && index >= 0){
-      if(message.charAt(index) === '\n' && message.charAt(index - 1) === '\n'){
-        messageLength = index + 1
-      }
-      index -= 1
-    }
-
-    message = message.slice(0, messageLength)
-  }
-
-  return message.trim();
-};
-
-const shows = [
+export const shows = [
   {
     "id": 434706,
     "age": null,
@@ -85995,8 +85944,3 @@ const shows = [
     }
   }
 ]
-const recShows = getRecommendedShowsForToday(shows)
-const message = generateSMSMessage(recShows)
-
-console.log(message)
-console.log(message.length)

@@ -2,6 +2,22 @@ import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3";
 import { DynamoDBClient, ScanCommand } from '@aws-sdk/client-dynamodb';
 import { DynamoDBDocumentClient } from '@aws-sdk/lib-dynamodb';
 import twilio from 'twilio';
+import {
+	RegExpMatcher,
+	TextCensor,
+	englishDataset,
+	englishRecommendedTransformers,
+  asteriskCensorStrategy,
+  keepStartCensorStrategy,
+} from 'obscenity';
+
+//obscenity
+const matcher = new RegExpMatcher({
+	...englishDataset.build(),
+	...englishRecommendedTransformers,
+});
+
+const censor = new TextCensor().setStrategy(keepStartCensorStrategy(asteriskCensorStrategy()));
 
 // Twilio credentials
 const accountSid = process.env.twilio_account_sid;
@@ -135,13 +151,21 @@ const generateSMSMessage = (recommendedShows) => {
   let message = `${recommendedShows.title}\n\n`;
 
   recommendedShows.shows.forEach(show => {
+
+    const bandsJoined = show.bands.join(', ')
+
+    const obscenityMatches = matcher.getAllMatches(bandsJoined)
+
+    const bandsFormatted = censor.applyTo(bandsJoined, obscenityMatches)
+
     message += `Venue: ${show.venue}\n`;
-    message += `Bands: ${show.bands.join(', ')}\n`;
+    message += `Bands: ${bandsFormatted}\n`;
     message += `Age: ${show.age ?? 'unknown'}\n`;
     if (show.sold_out) {
       message += 'SOLD OUT\n';
     }
-    message += `${show.tickets_url ? `Tickets: ${show.tickets_url}\n\n` : '\n'}`;
+    // check for url and profane name in url (twilio won't send any profanity)
+    message += `${show.tickets_url && !(matcher.hasMatch(show.tickets_url)) ? `Tickets: ${show.tickets_url}\n\n` : '\n'}`;
   });
 
   let totalCharCount = message.length
