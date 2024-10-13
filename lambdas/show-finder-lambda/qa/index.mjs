@@ -54,8 +54,11 @@ export const handler = async (event) => {
     const jsonData = await streamToString(s3Response.Body);
     const shows = JSON.parse(jsonData);
 
-    // Get today's recommended shows
-    const recommendedShows = getRecommendedShowsForToday(shows);
+    // Get recommended shows for 1 week from now
+    const today = new Date();
+    const nextWeek = new Date(today);
+    nextWeek.setDate(today.getDate() + 7);
+    const recommendedShows = getRecommendedShowsForDate(nextWeek, shows);
 
     // Fetch all users from DynamoDB
     const users = await fetchAllUsers();
@@ -77,13 +80,13 @@ export const handler = async (event) => {
 };
 
 // Function to filter recommended shows for the current day
-const getRecommendedShowsForToday = (shows) => {
-  const todayString = `Shows for ${new Date().toLocaleDateString()}`;
+const getRecommendedShowsForDate = (dateObj, shows) => {
+  const dateString = `Shows for ${dateObj.toLocaleDateString()}`;
 
-  const startOfDay = new Date();
+  const startOfDay = new Date(dateObj);
   startOfDay.setHours(6, 0, 0, 0); 
 
-  const endOfDay = new Date();
+  const endOfDay = new Date(dateObj);
   endOfDay.setDate(startOfDay.getDate() + 1);
   endOfDay.setHours(5, 59, 59, 999);
 
@@ -103,7 +106,7 @@ const getRecommendedShowsForToday = (shows) => {
     }));  
 
   return {
-    title: todayString,
+    title: dateString,
     shows: filteredShows,
   };
 };
