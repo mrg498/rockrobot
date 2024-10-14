@@ -19,6 +19,8 @@ const matcher = new RegExpMatcher({
 
 const censor = new TextCensor().setStrategy(keepStartCensorStrategy(asteriskCensorStrategy()));
 
+//stage
+const envStage = process.env.stage
 // Twilio credentials
 const accountSid = process.env.twilio_account_sid;
 const authToken = process.env.twilio_auth_token;
@@ -82,7 +84,7 @@ export const handler = async (event) => {
 
 // Function to filter recommended shows for the current day
 const getRecommendedShowsForDate = (dateObj, shows) => {
-  const dateString = `Shows for ${dateObj.toLocaleDateString()}`;
+  const dateString = `${envStage === 'QA' ? 'QA ' : ''}Shows for ${dateObj.toLocaleDateString()}`;
 
   const startOfDay = new Date(dateObj);
   startOfDay.setHours(6, 0, 0, 0); 
