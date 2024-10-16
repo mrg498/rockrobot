@@ -34,40 +34,45 @@ const dynamoClient = new DynamoDBClient({ region: 'us-east-2' });
 const dynamoDb = DynamoDBDocumentClient.from(dynamoClient);
 
 export const handler = async (event) => {
+  //find shows 2 weeks out -- tickets are usually still available
+  const today = new Date();
+  const nextFortNight = new Date(today);
+  nextFortNight.setDate(today.getDate() + 14);
+
   try {
-    // Fetch the JSON data from S3
-    const s3Params = {
-      Bucket: 'ohmyrocknessdata',
-      Key: 'new_york.json',
-    };
-    
-    const command = new GetObjectCommand(s3Params);
-    const s3Response = await s3Client.send(command);
+    const recommendedShowsByCity = {}
+    const cities = ['new_york', 'los_angeles', 'chicago'];
 
-    // Convert the S3 stream to a string
-    const streamToString = (stream) => {
-      return new Promise((resolve, reject) => {
-        const chunks = [];
-        stream.on('data', (chunk) => chunks.push(chunk));
-        stream.on('error', reject);
-        stream.on('end', () => resolve(Buffer.concat(chunks).toString('utf8')));
-      });
-    };
+    for(const city of cities){
+      // Fetch the JSON data from S3
+      const s3Params = {
+        Bucket: 'ohmyrocknessdata',
+        Key: `${city}.json`,
+      };
 
-    const jsonData = await streamToString(s3Response.Body);
-    const shows = JSON.parse(jsonData);
+      const command = new GetObjectCommand(s3Params);
+      const s3Response = await s3Client.send(command);
 
-    // Get recommended shows for 1 week from now
-    const today = new Date();
-    const nextWeek = new Date(today);
-    nextWeek.setDate(today.getDate() + 7);
-    const recommendedShows = getRecommendedShowsForDate(nextWeek, shows);
+      // Convert the S3 stream to a string
+      const streamToString = (stream) => {
+        return new Promise((resolve, reject) => {
+          const chunks = [];
+          stream.on('data', (chunk) => chunks.push(chunk));
+          stream.on('error', reject);
+          stream.on('end', () => resolve(Buffer.concat(chunks).toString('utf8')));
+        });
+      };
+
+      const jsonData = await streamToString(s3Response.Body);
+      const shows = JSON.parse(jsonData);
+      recommendedShowsByCity[city] = getRecommendedShowsForDate(nextFortNight, shows);
+    }
 
     // Fetch all users from DynamoDB
     const users = await fetchAllUsers();
 
     // Send SMS to all users
-    await sendSMSToUsers(users, recommendedShows);
+    await sendSMSToUsers(users, recommendedShowsByCity);
 
     return {
       statusCode: 200,
@@ -130,24 +135,48 @@ const fetchAllUsers = async () => {
 };
 
 // Function to send SMS to all users
-const sendSMSToUsers = async (users, recommendedShows) => {
-  let message = 'No featured shows today :('
+const sendSMSToUsers = async (users, recommendedShowsByCity) => {
+  const noShowsMessage = 'No shows to recommend today :(';
+  const batchSize = 20; // Number of users per batch
+  const batchDelay = 1000; // 1 second delay in milliseconds
+  const smsMessageByCity = {};
 
-  if (recommendedShows.shows.length > 0) {
-    message = generateSMSMessage(recommendedShows);
+  // Prepare messages by city
+  for (const [city, recommendedShows] of Object.entries(recommendedShowsByCity)) {
+    if (recommendedShows.shows.length > 0) {
+      smsMessageByCity[city] = generateSMSMessage(recommendedShows);
+    }
   }
-  
-  for (const user of users) {
-    if (user.phoneNumber.S) { // Ensure phoneNumber exists in the user object
-      console.log(`Sending message to ${user.phoneNumber.S}`); // Log the phone number
 
-      const response = await twilioClient.messages.create({
-        body: message,
-        messagingServiceSid: messagingServiceSid, // Use Messaging Service SID here
-        to: user.phoneNumber.S,
-      });
+  // Function to send texts to a batch of users
+  const sendBatch = async (batch) => {
+    for (const user of batch) {
+      if (user.phoneNumber.S) { 
+        const userCity = (user.city.S).toLowerCase();
+        const message = smsMessageByCity[userCity] || noShowsMessage;
 
-      console.log(`Message SID: ${response.sid}`); // Log the message SID
+        console.log(`Sending message to ${user.phoneNumber.S} for shows in ${userCity}`);
+        try {
+          const response = await twilioClient.messages.create({
+            body: message,
+            messagingServiceSid: messagingServiceSid,
+            to: user.phoneNumber.S,
+          });
+          console.log(`Message SID: ${response.sid}`);
+        } catch (error) {
+          console.error(`Error sending message to ${user.phoneNumber.S}:`, error);
+        }
+      }
+    }
+  };
+
+  // Process all users in batches
+  for (let i = 0; i < users.length; i += batchSize) {
+    const batch = users.slice(i, i + batchSize); // Get the current batch
+    await sendBatch(batch); // Send the current batch
+
+    if (i + batchSize < users.length) {
+      await new Promise(resolve => setTimeout(resolve, batchDelay)); // Wait for 1 second
     }
   }
 };
