@@ -6,6 +6,9 @@ const userTableName = process.env.user_table_name
 const client = new DynamoDBClient({ region: 'us-east-2' });
 const dynamoDb = DynamoDBDocumentClient.from(client);
 
+// environment stage
+const envStage = process.env.stage
+
 // Twilio credentials from environment variables
 const accountSid = process.env.twilio_account_sid;
 const authToken = process.env.twilio_auth_token;
@@ -15,6 +18,8 @@ const twilioClient = twilio(accountSid, authToken);
 export const handler = async (event) => {
     const body = JSON.parse(event.body);
     let { phoneNumber, city } = body;
+
+    const validCities = ['NEW_YORK', 'LOS_ANGELES', 'CHICAGO']
 
     // Validate phone number
     const phoneNumberRegex = /^\+1\d{10}$/;
@@ -31,19 +36,19 @@ export const handler = async (event) => {
 
     try {
         //Try and Send welcome message. This will error if the phone number is invalid
-        const welcomeMessage = "Welcome to Rock Robot!\n\nYou have signed up to recieve a daily text message of reccomended live music shows in your area.\n\nPlease reply with 'Y' or 'YES' to verify your phone number.\n\nYou can reply with 'N' or 'NO' at any time to unsubscribe.";
+        const welcomeMessage = `${envStage === 'QA' ? 'QA ': ''}Welcome to Rock Robot!\n\nYou have signed up to recieve a daily text message of reccomended live music shows in your area.\n\nPlease reply with 'Y' or 'YES' to verify your phone number.\n\nYou can reply with 'N' or 'NO' at any time to unsubscribe.`;
         await twilioClient.messages.create({
             body: welcomeMessage,
             messagingServiceSid: messagingServiceSid,
             to: phoneNumber
         });
-        
+
         // Add user to DynamoDB
         const params = {
             TableName: userTableName,
             Item: {
                 phoneNumber,
-                city,
+                city: validCities.includes(city) ? city : 'NEW_YORK',
                 createdAt: new Date().toISOString(),
                 updatedAt: new Date().toISOString(),
                 deleted: false,
