@@ -1,6 +1,5 @@
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { DynamoDBDocumentClient, PutCommand } from '@aws-sdk/lib-dynamodb';
-import axios from 'axios';
 import twilio from 'twilio';
 
 const userTableName = process.env.user_table_name
@@ -38,7 +37,7 @@ export const handler = async (event) => {
             messagingServiceSid: messagingServiceSid,
             to: phoneNumber
         });
-        
+
         // Add user to DynamoDB
         const params = {
             TableName: userTableName,
