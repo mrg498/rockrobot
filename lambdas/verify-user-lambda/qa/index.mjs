@@ -1,9 +1,19 @@
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { DynamoDBDocumentClient, UpdateCommand, DeleteCommand } from '@aws-sdk/lib-dynamodb';
+import twilio from 'twilio';
 
 const userTableName = process.env.user_table_name;
 const client = new DynamoDBClient({ region: 'us-east-2' });
 const dynamoDb = DynamoDBDocumentClient.from(client);
+
+// environment stage
+const envStage = process.env.stage
+
+// Twilio credentials from environment variables
+const accountSid = process.env.twilio_account_sid;
+const authToken = process.env.twilio_auth_token;
+const messagingServiceSid = process.env.twilio_messaging_service_sid;
+const twilioClient = twilio(accountSid, authToken);
 
 export const handler = async (event) => {
     try {
@@ -32,8 +42,17 @@ export const handler = async (event) => {
             };
 
             await dynamoDb.send(new UpdateCommand(updateParams));
+
             console.log(`User ${phoneNumber} successfully verified.`);
-        } else if (['N', 'NO'].includes(response)) {
+
+            const verifyMessage = `${envStage === 'QA' ? 'QA ': ''} You're verified. Rock On!`;
+            await twilioClient.messages.create({
+                body: verifyMessage,
+                messagingServiceSid: messagingServiceSid,
+                to: phoneNumber
+            });
+
+        } else if (['N', 'NO', 'STOP'].includes(response)) {
             // Delete the user record
             const deleteParams = {
                 TableName: userTableName,
@@ -42,6 +61,14 @@ export const handler = async (event) => {
 
             await dynamoDb.send(new DeleteCommand(deleteParams));
             console.log(`User ${phoneNumber} unsubscribed and deleted.`);
+
+            const unsubMessage = `${envStage === 'QA' ? 'QA ': ''} You're unsubscribed. Go be free`;
+            await twilioClient.messages.create({
+                body: unsubMessage,
+                messagingServiceSid: messagingServiceSid,
+                to: phoneNumber
+            });
+
         } else {
             console.log(`Unexpected User response: ${response}`)
             return
