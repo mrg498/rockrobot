@@ -123,9 +123,10 @@ const getRecommendedShowsForDate = (dateObj, shows) => {
 const fetchAllUsers = async () => {
   const params = {
     TableName: userTableName,
-    FilterExpression: "deleted = :deleted",
+    FilterExpression: "deleted = :deleted AND verified = :verified",
     ExpressionAttributeValues: {
-      ":deleted": { BOOL: false }  // Specify the type as BOOL for boolean
+      ":deleted": { BOOL: false },  // Specify type as BOOL for boolean
+      ":verified": { BOOL: true }   // Specify type as BOOL for boolean
     }
   };
 
