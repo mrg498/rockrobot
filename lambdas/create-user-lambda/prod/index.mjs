@@ -17,7 +17,19 @@ const twilioClient = twilio(accountSid, authToken);
 
 export const handler = async (event) => {
     const body = JSON.parse(event.body);
-    let { phoneNumber, city } = body;
+    let { phoneNumber, city, smsConsent } = body;
+
+    if (!smsConsent){
+        console.error(`user ${phoneNumber} did not allow smsConsent`);
+        return {
+            statusCode: 500,
+            headers: {
+                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Credentials': true,
+            },
+            body: JSON.stringify({ error: 'Could not register user' }),
+        };
+    }
 
     const validCities = ['NEW_YORK', 'LOS_ANGELES', 'CHICAGO']
 
@@ -36,7 +48,7 @@ export const handler = async (event) => {
 
     try {
         //Try and Send welcome message. This will error if the phone number is invalid
-        const welcomeMessage = `${envStage === 'QA' ? 'QA ': ''}Welcome to Rock Robot!\n\nYou have signed up to recieve a daily text message of reccomended live music shows in your area.\n\nPlease reply with 'Y' or 'YES' to verify your phone number.\n\nYou can reply with 'N' or 'NO' at any time to unsubscribe.`;
+        const welcomeMessage = `${envStage === 'QA' ? 'QA ': ''}Welcome to Rock Robot!\n\nYou have signed up to recieve a daily text message of recommended live music shows in your area.\n\nPlease reply with 'Y' or 'YES' to verify your phone number.\n\nYou can reply with 'N' or 'NO' at any time to unsubscribe.`;
         await twilioClient.messages.create({
             body: welcomeMessage,
             messagingServiceSid: messagingServiceSid,
