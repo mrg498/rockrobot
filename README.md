@@ -6,7 +6,7 @@ QA - https://mrg498.github.io/rockrobot/
 to deploy to QA, copy contents from signup-form qa directory into gh-pages branch and push it up
 
 PROD - https://rockrobotmusic.com/
-to deploy to PROD, cody contents from signup-form prod directory to s3 bucket. Also create a cloudfront invalidation
+to deploy to PROD, copy contents from signup-form prod directory to s3 bucket. Also create a cloudfront invalidation
 
 ## s3
 show data from ohmyrockness api is stored in s3 bucket named ohmyrocknessdata. write now a lambda function called showData hits their api for NY every morning and dumps the JSON response in there. This is done on a schedule with an EventBridge cron job
