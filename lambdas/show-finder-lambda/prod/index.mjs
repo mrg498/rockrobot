@@ -184,6 +184,7 @@ const sendSMSToUsers = async (users, recommendedShowsByCity) => {
 
 // Function to generate SMS message
 const generateSMSMessage = (recommendedShows) => {
+  const showUrlEnabled = false
   let message = `${recommendedShows.title}\n\n`;
 
   recommendedShows.shows.forEach(show => {
@@ -201,7 +202,7 @@ const generateSMSMessage = (recommendedShows) => {
       message += 'SOLD OUT\n';
     }
     // check for url and profane name in url (twilio won't send any profanity)
-    message += `${show.tickets_url && !(matcher.hasMatch(show.tickets_url)) ? `Tickets: ${show.tickets_url}\n\n` : '\n'}`;
+    message += `${showUrlEnabled && show.tickets_url && !(matcher.hasMatch(show.tickets_url)) ? `Tickets: ${show.tickets_url}\n\n` : '\n'}`;
   });
 
   let totalCharCount = message.length
